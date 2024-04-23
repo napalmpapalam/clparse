@@ -137,7 +137,11 @@ impl Changelog {
     }
 
     pub fn unreleased(&self) -> Option<&Release> {
-        self.releases.iter().find(|r| r.version.is_none())
+        self.releases.iter().find(|r| {
+            r.raw_version
+                .as_ref()
+                .is_some_and(|v| v.contains("Unreleased"))
+        })
     }
 
     pub fn release_mut(&mut self, release: Version) -> Option<&mut Release> {
