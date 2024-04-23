@@ -69,12 +69,8 @@ pub fn main() -> Result<()> {
     };
 
     let output = match matches.value_of("format").unwrap_or("markdown") {
-        "json" => {
-            format!("{}", serde_json::to_string_pretty(&changelog)?)
-        }
-        "yaml" | "yml" => {
-            format!("{}", serde_yaml::to_string(&changelog)?)
-        }
+        "json" => (serde_json::to_string_pretty(&changelog)?).to_string(),
+        "yaml" | "yml" => (serde_yaml::to_string(&changelog)?).to_string(),
         "markdown" | "md" => {
             format!("{}", &changelog)
         }

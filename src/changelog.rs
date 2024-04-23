@@ -43,6 +43,8 @@ pub struct Release {
     #[serde(serialize_with = "version_serialize")]
     version: Option<Version>,
     #[builder(setter(strip_option, into), default)]
+    raw_version: Option<String>,
+    #[builder(setter(strip_option, into), default)]
     link: Option<String>,
     #[builder(setter(strip_option), default)]
     date: Option<NaiveDate>,
@@ -134,6 +136,10 @@ impl Changelog {
         self.releases.iter_mut().find(|r| r.version.is_none())
     }
 
+    pub fn unreleased(&self) -> Option<&Release> {
+        self.releases.iter().find(|r| r.version.is_none())
+    }
+
     pub fn release_mut(&mut self, release: Version) -> Option<&mut Release> {
         self.releases
             .iter_mut()
@@ -219,7 +225,7 @@ impl fmt::Display for Release {
                         Security(description) => ("security", description),
                     };
 
-                    description = description.replace("\n", " ");
+                    description = description.replace('\n', " ");
                     // The first 3 characters are not included in this change description,
                     // so we need to wrap at 3 less characters than expected.
                     description = wrap(&description, wrap_at - 3).join("\n  ");
@@ -248,7 +254,7 @@ impl fmt::Display for Release {
 
         changesets = changesets
             .into_iter()
-            .filter(|(_, changes)| changes.clone().iter().count() > 0)
+            .filter(|(_, changes)| !changes.clone().is_empty())
             .collect();
 
         for (name, changes) in changesets {

@@ -100,9 +100,9 @@ impl ChangelogParser {
                 Event::Start(Tag::Header(3)) => section = ChangelogSection::ChangesetHeader,
 
                 // Links.
-                Event::Start(Tag::Link(LinkType::Inline, _, _)) => accumulator.push_str("["),
+                Event::Start(Tag::Link(LinkType::Inline, _, _)) => accumulator.push('['),
                 Event::Start(Tag::Link(LinkType::Collapsed, _, _)) => {
-                    accumulator.push_str("[");
+                    accumulator.push('[');
                     link_accumulator = String::from("[");
                 }
                 Event::End(Tag::Link(LinkType::Inline, href, _)) => {
@@ -128,7 +128,7 @@ impl ChangelogParser {
                 }
 
                 // Line breaks.
-                Event::SoftBreak => accumulator.push_str("\n"),
+                Event::SoftBreak => accumulator.push('\n'),
                 Event::End(Tag::Paragraph) => accumulator.push_str("\n\n"),
 
                 // Inline code.
@@ -136,9 +136,7 @@ impl ChangelogParser {
 
                 // Text formatting.
                 Event::Start(Tag::Strong) | Event::End(Tag::Strong) => accumulator.push_str("**"),
-                Event::Start(Tag::Emphasis) | Event::End(Tag::Emphasis) => {
-                    accumulator.push_str("_")
-                }
+                Event::Start(Tag::Emphasis) | Event::End(Tag::Emphasis) => accumulator.push('_'),
                 Event::Start(Tag::Strikethrough) | Event::End(Tag::Strikethrough) => {
                     accumulator.push_str("~~")
                 }
@@ -196,6 +194,7 @@ impl ChangelogParser {
             }
 
             let left = left.replace(['[', ']'], "");
+            release.raw_version(left.clone());
 
             if let Some(version) = Version::new(&left) {
                 release.version(version);
