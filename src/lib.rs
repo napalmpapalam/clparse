@@ -3,10 +3,10 @@ use changelog::{Change, Changelog, ChangelogBuilder, Release, ReleaseBuilder};
 use chrono::NaiveDate;
 use err_derive::Error;
 use pulldown_cmark::{Event, LinkType, Parser, Tag};
-use versions::Version;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
+use versions::Version;
 
 pub mod changelog;
 
@@ -42,10 +42,7 @@ pub struct ChangelogParser {
 
 impl ChangelogParser {
     pub fn new(separator: String, wrap: Option<usize>) -> Self {
-        Self {
-            separator,
-            wrap,
-        }
+        Self { separator, wrap }
     }
 
     pub fn parse(&self, path: PathBuf) -> Result<Changelog> {
@@ -161,7 +158,9 @@ impl ChangelogParser {
 
                         section = ChangelogSection::Changeset(text.to_string())
                     }
-                    ChangelogSection::Changeset(_) | ChangelogSection::ReleaseHeader => accumulator.push_str(&text),
+                    ChangelogSection::Changeset(_) | ChangelogSection::ReleaseHeader => {
+                        accumulator.push_str(&text)
+                    }
                     _ => (),
                 },
                 _ => (),
@@ -192,9 +191,11 @@ impl ChangelogParser {
             }
 
             let right = &right.replace(" [YANKED]", "");
-            if let Ok(date) = NaiveDate::parse_from_str(&right, "%Y-%m-%d") {
+            if let Ok(date) = NaiveDate::parse_from_str(right, "%Y-%m-%d") {
                 release.date(date);
             }
+
+            let left = left.replace(['[', ']'], "");
 
             if let Some(version) = Version::new(&left) {
                 release.version(version);
@@ -204,14 +205,19 @@ impl ChangelogParser {
         *accumulator = String::new();
     }
 
-    fn build_release(&self, releases: &mut Vec<Release>, release: &mut ReleaseBuilder, changeset: &mut Vec<Change>) -> Result<()> {
+    fn build_release(
+        &self,
+        releases: &mut Vec<Release>,
+        release: &mut ReleaseBuilder,
+        changeset: &mut Vec<Change>,
+    ) -> Result<()> {
         release.changes(changeset.clone());
         release.separator(self.separator.clone());
         release.wrap(self.wrap);
         releases.push(
             release
                 .build()
-                .map_err(ChangelogParserError::ErrorBuildingRelease)?
+                .map_err(ChangelogParserError::ErrorBuildingRelease)?,
         );
 
         *changeset = Vec::new();
